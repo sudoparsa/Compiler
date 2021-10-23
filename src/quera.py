@@ -149,99 +149,72 @@ def transit_COMMENT(current_state, character):
 
     return next_state ,is_goal, unclosed_comment
 
-global tokens, errors
+
 tokens = {}
-errors = {}
+lexical_errors = {}
+
 def add_token(lineno, token):
     if lineno in tokens:
         tokens[lineno].append(token)
     else:
         tokens[lineno] = [token]
+
 def add_errors(lineno, error):
-    if lineno in errors:
-        errors[lineno].append(error)
+    if lineno in lexical_errors:
+        lexical_errors[lineno].append(error)
     else:
-        errors[lineno] = [error]
-SYMBOL_TABLE = ['', 'if', 'else', 'void', 'int', 'repeat', 'break', 'until', 'return']
-input = """int count;
-int result[50];
+        lexical_errors[lineno] = [error]
+SYMBOL_TABLE = ['if', 'else', 'void', 'int', 'repeat', 'break', 'until', 'return']
+NOKEYWORDS = 8
 
-
-int f(int a, int result[#]) {
-    count =## count + 1;
-    if(result[a - 1]){
-        return result[a - 1];
-    } else {
-        if (a == 1) {
-            result[a - 1] = 1;
-            return 1;
-        } else if (a ===== 2){
-            result[a - 1] = 1;
-            return 1;
-        } else {
-            result[a - 1] = f(a - 2, result) + f(a - 1, result);
-            return result[a - 1];
-        }
-    }
-}
-
-void main(void$) {
-    int i;
-    i = 0;
-    repeat {
-        result[i] = 0;
-        i = i *## 2;
-    } until (50 < i)
-    count = 0;
-    output(f(40, result));
-    output(count);
-}
-1941"""
+f = open('input.txt', 'r')
+input_code = f.read()
+f.close()
 
 cursor = 0
 lineno = 1
-while cursor < len(input):
+while cursor < len(input_code):
     temp = cursor
     s1, s2, s3, s4, s5 = 0, 0, 0, 0, 0
     s1_goal, s2_goal, s3_goal, s4_goal, s5_goal = False, False, False, False, False
     invalid_number, unclosed_comment, unmatched_comment, look_ahead = False, False, False, False
     temp_lineno = lineno
-    while temp <= len(input):
+    while temp <= len(input_code):
         
-        if temp == len(input):
+        if temp == len(input_code):
             character = EOF
         else:
-            character = input[temp]
+            character = input_code[temp]
 
         if character == '\n':
             temp_lineno += 1
-        if not s1 == -1:
+        if s1 != -1:
             s1, s1_goal = transit_ID(s1, character)
-        if not s2 == -1:
+        if s2 != -1:
             s2, s2_goal, invalid_number = transit_NUM(s2, character)
-        if not s3 == -1:
+        if s3 != -1:
             s3, s3_goal = transit_WhiteSpace(s3, character)
-        if not s4 == -1:
+        if s4 != -1:
             s4, s4_goal, unmatched_comment, look_ahead = transit_Symbol(s4, character)
-        if not s5 == -1:
+        if s5 != -1:
             s5, s5_goal, unclosed_comment = transit_COMMENT(s5, character)
         
         # print(s1, s2, s3, s4, s5)
         if s1_goal:
-            if input[cursor:temp] in SYMBOL_TABLE and SYMBOL_TABLE.index(input[cursor:temp]) <= 8:
+            if input_code[cursor:temp] in SYMBOL_TABLE and SYMBOL_TABLE.index(input_code[cursor:temp]) < NOKEYWORDS:
                 # print(lineno, ('KEYWORD', input[cursor:temp]))
-                add_token(lineno, ('KEYWORD', input[cursor:temp]))
+                add_token(lineno, ('KEYWORD', input_code[cursor:temp]))
             else:
-                if not input[cursor:temp] in SYMBOL_TABLE:
-                    SYMBOL_TABLE.append(input[cursor:temp])
+                if not input_code[cursor:temp] in SYMBOL_TABLE:
+                    SYMBOL_TABLE.append(input_code[cursor:temp])
                 # print(lineno, ('ID', input[cursor:temp]))
-                add_token(lineno, ('ID', input[cursor:temp]))
+                add_token(lineno, ('ID', input_code[cursor:temp]))
             cursor = temp
             lineno = temp_lineno
             break
         if s2_goal:
             # print(lineno, ('NUM', input[cursor:temp]))
-            add_token(lineno, ('NUM', input[cursor:temp]))
+            add_token(lineno, ('NUM', input_code[cursor:temp]))
             lineno = temp_lineno
             cursor = temp
             break
@@ -252,11 +225,11 @@ while cursor < len(input):
         if s4_goal:
             if look_ahead:
                 # print(lineno, ('SYMBOL', input[cursor:temp]))
-                add_token(lineno, ('SYMBOL', input[cursor:temp]))
+                add_token(lineno, ('SYMBOL', input_code[cursor:temp]))
                 cursor = temp
             else:
                 # print(lineno, ('SYMBOL', input[cursor:temp + 1]))
-                add_token(lineno, ('SYMBOL', input[cursor:temp + 1]))
+                add_token(lineno, ('SYMBOL', input_code[cursor:temp + 1]))
                 cursor = temp + 1
             lineno = temp_lineno
             break
@@ -270,11 +243,11 @@ while cursor < len(input):
             lineno = temp_lineno
             if invalid_number:
                 # print(lineno, (input[cursor:temp + 1], 'Invalid number'))
-                add_errors(lineno, (input[cursor:temp + 1], 'Invalid number'))
+                add_errors(lineno, (input_code[cursor:temp + 1], 'Invalid number'))
                 cursor = temp + 1
             elif unclosed_comment:
                 # print(lineno, (input[cursor:temp], 'Unclosed comment'))
-                add_errors(lineno, (input[cursor:temp + 1], 'Unclosed comment'))
+                add_errors(lineno, (input_code[cursor:temp + 1], 'Unclosed comment'))
                 cursor = temp
             elif unmatched_comment:
                 # print(lineno,('*/', 'Unmatched comment'))
@@ -282,16 +255,30 @@ while cursor < len(input):
                 cursor = temp + 1
             else:
                 # print(lineno, (input[cursor:temp + 1], 'Invalid Input'))
-                add_errors(lineno, (input[cursor:temp + 1], 'Invalid Input'))
+                add_errors(lineno, (input_code[cursor:temp + 1], 'Invalid input'))
                 cursor = temp + 1
             break
 
         temp += 1
 
-print(SYMBOL_TABLE)
-print()
-print(errors)
-print()
-for line in tokens:
-    print(line, tokens[line])
 
+f = open('symbol_table.txt', 'w')
+for symbol, index in zip(SYMBOL_TABLE, range(1, len(SYMBOL_TABLE)+1)):
+    f.write(str(index) + '.\t' + symbol + '\n')
+f.close()
+
+f = open('lexical_errors.txt', 'w')
+for key, values in lexical_errors.items():
+    f.write(str(key) + '.\t')
+    for error in values:
+        f.write('(' + error[0] + ', ' + error[1] + ') ')
+    f.write('\n')
+f.close()
+
+f = open('tokens.txt', 'w')
+for line, values in tokens.items():
+    f.write(str(line) + '.\t')
+    for token in values:
+        f.write('(' + token[0] + ', ' + token[1] + ') ')
+    f.write('\n')
+f.close()
