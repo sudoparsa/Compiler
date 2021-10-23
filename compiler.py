@@ -109,7 +109,7 @@ while cursor < len(inp):
                 temp_lineno += 1
         if state in GOAL_STATES:
             token = get_token(state, inp[cursor:temp + 1])
-            if not token == None:
+            if token is not None:
                 add_token(lineno, token)
             cursor = temp + 1
             lineno = temp_lineno  ## ?????
