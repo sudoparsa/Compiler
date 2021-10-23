@@ -52,12 +52,12 @@ def add_error(lineno, error):
         errors[lineno] = [error]
 
 
-SYMBOL_TABLE = ['', 'if', 'else', 'void', 'int', 'repeat', 'break', 'until', 'return']
-
+SYMBOL_TABLE = ['if', 'else', 'void', 'int', 'repeat', 'break', 'until', 'return']
+NO_KEYWORDS = len(SYMBOL_TABLE)
 
 def get_token(state, lexeme):
     if state == 2:
-        if lexeme in SYMBOL_TABLE and SYMBOL_TABLE.index(lexeme) <= 8:
+        if lexeme in SYMBOL_TABLE and SYMBOL_TABLE.index(lexeme) < NO_KEYWORDS:
             return 'KEYWORD', lexeme
         else:
             if not lexeme in SYMBOL_TABLE:
@@ -123,8 +123,8 @@ while cursor < len(inp):
         temp += 1
 
 f = open('symbol_table.txt', 'w')
-for i in range(1, len(SYMBOL_TABLE)):
-    f.write(f'{i}.\t{SYMBOL_TABLE[i]}\n')
+for i in range(1, len(SYMBOL_TABLE) + 1):
+    f.write(f'{i}.\t{SYMBOL_TABLE[i - 1]}\n')
 f.close()
 
 f = open('tokens.txt', 'w')
