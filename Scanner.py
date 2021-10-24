@@ -3,7 +3,13 @@
 SYMBOL = [';', ':', ',', '[', ']', '(', ')', '{', '}', '+', '-', '<']
 WHITESPACE = [' ', '\r', '\t', '\v', '\f']
 EOF = ''
-DFA = {  # 0   1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16  17  18  19
+'''
+Below is dfa.png implementation.
+Keys are actions.
+Values are lists corresponding to next state. List indexes show current state.
+Please note that in goal states, next state doesn't matter so we set them to zero.
+'''
+DFA = {  # 0  1  2  3  4  5  6  7  8  9  10  11  12  13  14  15  16
     'letter': [1, 1, 0, -2, 0, 0, 0, 9, 0, 0, 11, 0, -5, 13, 13, 0, 16],
     'digit': [3, 1, 0, 3, 0, 0, 0, 9, 0, 0, 11, 0, -5, 13, 13, 0, 16],
     'symbol': [6, 2, 0, 4, 0, 0, 0, 9, 0, 0, 11, 0, -5, 13, 13, 0, 16],
