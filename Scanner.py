@@ -15,8 +15,15 @@ DFA = {  # 0   1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16  1
     EOF: [5, 2, 0, 4, 0, 0, 0, 9, 0, 0, 11, 0, -5, -4, -4, 0, 15],
     'invalid': [-1, -1, 0, -2, 0, 0, 0, -1, 0, 0, -1, 0, -1, 13, 13, 0, 16]
 }
+
 GOAL_STATES = [2, 4, 5, 6, 8, 9, 11, 15]
 LOOK_AHEAD_STATES = [2, 4, 9, 11, -5]
+
+SYMBOL_TABLE = ['if', 'else', 'void', 'int', 'repeat', 'break', 'until', 'return']
+NO_KEYWORDS = len(SYMBOL_TABLE)
+
+tokens = {}
+errors = {}
 
 
 def transit(current_state, character):
@@ -36,10 +43,6 @@ def transit(current_state, character):
     return next_state
 
 
-tokens = {}
-errors = {}
-
-
 def add_token(lineno, token):
     if lineno in tokens:
         tokens[lineno].append(token)
@@ -52,10 +55,6 @@ def add_error(lineno, error):
         errors[lineno].append(error)
     else:
         errors[lineno] = [error]
-
-
-SYMBOL_TABLE = ['if', 'else', 'void', 'int', 'repeat', 'break', 'until', 'return']
-NO_KEYWORDS = len(SYMBOL_TABLE)
 
 
 def get_token(state, lexeme):
@@ -120,7 +119,7 @@ def get_all_tokens(file_path='input.txt'):
                 add_token(token_lineno, token)
         if state < 0:
             add_error(token_lineno, token)
-        if not character:
+        if not character:  # EOF
             break
     file.close()
     save2txt()
