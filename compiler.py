@@ -1,3 +1,7 @@
+# Parsa Hosseini 98109583
+# Mahdi Salmani 98105824
+# We designed our Scanner based on dfa.png
+
 SYMBOL = [';', ':', ',', '[', ']', '(', ')', '{', '}', '+', '-', '<']
 WHITESPACE = [' ', '\r', '\t', '\v', '\f']
 EOF = ''
@@ -55,12 +59,13 @@ def add_error(lineno, error):
 SYMBOL_TABLE = ['if', 'else', 'void', 'int', 'repeat', 'break', 'until', 'return']
 NO_KEYWORDS = len(SYMBOL_TABLE)
 
+
 def get_token(state, lexeme):
     if state == 2:
         if lexeme in SYMBOL_TABLE and SYMBOL_TABLE.index(lexeme) < NO_KEYWORDS:
             return 'KEYWORD', lexeme
         else:
-            if not lexeme in SYMBOL_TABLE:
+            if lexeme not in SYMBOL_TABLE:
                 SYMBOL_TABLE.append(lexeme)
             return 'ID', lexeme
     if state == 4:
@@ -84,43 +89,38 @@ def get_error(state, lexeme):
         return lexeme[:min([7, len(lexeme)])] + '...', 'Unclosed comment'
 
 
-f = open('input.txt', 'r')
-inp = f.read()
-f.close()
+f = open('input.txt', 'rb')
 
-cursor = 0
 lineno = 1
-while cursor < len(inp):
-    temp = cursor
-    state = 0
+while True:
+    state = 0  # Start state
     temp_lineno = lineno
-    while temp <= len(inp):
-
-        if temp == len(inp):
-            character = EOF
-        else:
-            character = inp[temp]
+    raw_token = ''
+    character = True
+    while character:
+        character = f.read(1).decode('utf-8')
 
         state = transit(state, character)
         if state in LOOK_AHEAD_STATES:
-            temp -= 1
+            f.seek(f.tell() - 1, 0)
         else:
             if character == '\n':
                 temp_lineno += 1
+            raw_token += character
         if state in GOAL_STATES:
-            token = get_token(state, inp[cursor:temp + 1])
+            token = get_token(state, raw_token)
             if token is not None:
                 add_token(lineno, token)
-            cursor = temp + 1
             lineno = temp_lineno  ## ?????
             break
         if state < 0:
-            error = get_error(state, inp[cursor:temp + 1])
+            error = get_error(state, raw_token)
             add_error(lineno, error)
-            cursor = temp + 1
             lineno = temp_lineno  ## ?????
             break
-        temp += 1
+    if not character:
+        break
+f.close()
 
 f = open('symbol_table.txt', 'w')
 for i in range(1, len(SYMBOL_TABLE) + 1):
