@@ -1,24 +1,56 @@
-terminals = ['$', 'ID', ';', '[', 'NUM', ']', '(', ')', 'int', 'void', ',', '{', '}', 'break', 'if', 'endif', 'else', 'repeat', 'until', 'return', '=', '<', '==', '+', '-', '*', 'epsilon']
+from preprocess2 import get_action_table
+from Scanner import get_next_token
+from anytree import Node, RenderTree
 
-nterminals = ['Program', 'Declaration-list', 'Declaration', 'Declaration-initial', 'Declaration-prime', 'Var-declaration-prime', 'Fun-declaration-prime', 'Type-specifier', 'Params', 'Param-list', 'Param', 'Param-prime', 'Compound-stmt', 'Statement-list', 'Statement', 'Expression-stmt', 'Selection-stmt', 'Else-stmt', 'Iteration-stmt', 'Return-stmt', 'Return-stmt-prime', 'Expression', 'B', 'H', 'Simple-expression-zegond', 'Simple-expression-prime', 'C', 'Relop', 'Additive-expression', 'Additive-expression-prime', 'Additive-expression-zegond', 'D', 'Addop', 'Term', 'Term-prime', 'Term-zegond', 'G', 'Factor', 'Var-call-prime', 'Var-prime', 'Factor-prime', 'Factor-zegond', 'Args', 'Arg-list', 'Arg-list-prime']
 
-first = {'Program': ['$', 'int', 'void'], 'Declaration-list': ['int', 'void', 'epsilon'], 'Declaration': ['int', 'void'], 'Declaration-initial': ['int', 'void'], 'Declaration-prime': [';', '[', '('], 'Var-declaration-prime': [';', '['], 'Fun-declaration-prime': ['('], 'Type-specifier': ['int', 'void'], 'Params': ['int', 'void'], 'Param-list': [',', 'epsilon'], 'Param': ['int', 'void'], 'Param-prime': ['[', 'epsilon'], 'Compound-stmt': ['{'], 'Statement-list': ['ID', ';', 'NUM', '(', '{', 'break', 'if', 'repeat', 'return', 'epsilon'], 'Statement': ['ID', ';', 'NUM', '(', '{', 'break', 'if', 'repeat', 'return'], 'Expression-stmt': ['ID', ';', 'NUM', '(', 'break'], 'Selection-stmt': ['if'], 'Else-stmt': ['endif', 'else'], 'Iteration-stmt': ['repeat'], 'Return-stmt': ['return'], 'Return-stmt-prime': ['ID', ';', 'NUM', '('], 'Expression': ['ID', 'NUM', '('], 'B': ['[', '(', '=', '<', '==', '+', '-', '*', 'epsilon'], 'H': ['=', '<', '==', '+', '-', '*', 'epsilon'], 'Simple-expression-zegond': ['NUM', '('], 'Simple-expression-prime': ['(', '<', '==', '+', '-', '*', 'epsilon'], 'C': ['<', '==', 'epsilon'], 'Relop': ['<', '=='], 'Additive-expression': ['ID', 'NUM', '('], 'Additive-expression-prime': ['(', '+', '-', '*', 'epsilon'], 'Additive-expression-zegond': ['NUM', '('], 'D': ['+', '-', 'epsilon'], 'Addop': ['+', '-'], 'Term': ['ID', 'NUM', '('], 'Term-prime': ['(', '*', 'epsilon'], 'Term-zegond': ['NUM', '('], 'G': ['*', 'epsilon'], 'Factor': ['ID', 'NUM', '('], 'Var-call-prime': ['[', '(', 'epsilon'], 'Var-prime': ['[', 'epsilon'], 'Factor-prime': ['(', 'epsilon'], 'Factor-zegond': ['NUM', '('], 'Args': ['ID', 'NUM', '(', 'epsilon'], 'Arg-list': ['ID', 'NUM', '('], 'Arg-list-prime': [',', 'epsilon']}
+def get_look_ahead(file, lineno):
+    token, state, character, lineno, token_lineno = get_next_token(file, lineno)
+    if state >= 0 and token is not None:  # No Lexical Error
+        type, lexeme = token
+        if type == 'ID' or type == 'NUM':
+            return type, lineno, token_lineno
+        return lexeme, lineno, token_lineno
+    if not character:
+        return '$', lineno, token_lineno
+    get_look_ahead(file, lineno)
 
-follow = {'Program': [''], 'Declaration-list': ['$', 'ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'repeat', 'return'], 'Declaration': ['$', 'ID', ';', 'NUM', '(', 'int', 'void', '{', '}', 'break', 'if', 'repeat', 'return'], 'Declaration-initial': [';', '[', '(', ')', ','], 'Declaration-prime': ['$', 'ID', ';', 'NUM', '(', 'int', 'void', '{', '}', 'break', 'if', 'repeat', 'return'], 'Var-declaration-prime': ['$', 'ID', ';', 'NUM', '(', 'int', 'void', '{', '}', 'break', 'if', 'repeat', 'return'], 'Fun-declaration-prime': ['$', 'ID', ';', 'NUM', '(', 'int', 'void', '{', '}', 'break', 'if', 'repeat', 'return'], 'Type-specifier': ['ID'], 'Params': [')'], 'Param-list': [')'], 'Param': [')', ','], 'Param-prime': [')', ','], 'Compound-stmt': ['$', 'ID', ';', 'NUM', '(', 'int', 'void', '{', '}', 'break', 'if', 'endif', 'else', 'repeat', 'until', 'return'], 'Statement-list': ['}'], 'Statement': ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'endif', 'else', 'repeat', 'until', 'return'], 'Expression-stmt': ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'endif', 'else', 'repeat', 'until', 'return'], 'Selection-stmt': ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'endif', 'else', 'repeat', 'until', 'return'], 'Else-stmt': ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'endif', 'else', 'repeat', 'until', 'return'], 'Iteration-stmt': ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'endif', 'else', 'repeat', 'until', 'return'], 'Return-stmt': ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'endif', 'else', 'repeat', 'until', 'return'], 'Return-stmt-prime': ['ID', ';', 'NUM', '(', '{', '}', 'break', 'if', 'endif', 'else', 'repeat', 'until', 'return'], 'Expression': [';', ']', ')', ','], 'B': [';', ']', ')', ','], 'H': [';', ']', ')', ','], 'Simple-expression-zegond': [';', ']', ')', ','], 'Simple-expression-prime': [';', ']', ')', ','], 'C': [';', ']', ')', ','], 'Relop': ['ID', 'NUM', '('], 'Additive-expression': [';', ']', ')', ','], 'Additive-expression-prime': [';', ']', ')', ',', '<', '=='], 'Additive-expression-zegond': [';', ']', ')', ',', '<', '=='], 'D': [';', ']', ')', ',', '<', '=='], 'Addop': ['ID', 'NUM', '('], 'Term': [';', ']', ')', ',', '<', '==', '+', '-'], 'Term-prime': [';', ']', ')', ',', '<', '==', '+', '-'], 'Term-zegond': [';', ']', ')', ',', '<', '==', '+', '-'], 'G': [';', ']', ')', ',', '<', '==', '+', '-'], 'Factor': [';', ']', ')', ',', '<', '==', '+', '-', '*'], 'Var-call-prime': [';', ']', ')', ',', '<', '==', '+', '-', '*'], 'Var-prime': [';', ']', ')', ',', '<', '==', '+', '-', '*'], 'Factor-prime': [';', ']', ')', ',', '<', '==', '+', '-', '*'], 'Factor-zegond': [';', ']', ')', ',', '<', '==', '+', '-', '*'], 'Args': [')'], 'Arg-list': [')'], 'Arg-list-prime': [')']}
 
-grammar_file = open('test_grammar.txt')
-def extract_all_productions(production):
-    all = []
-    start = 0
-    for i in range(len(production)):
-        if production[i] == '|':
-            all.append(production[start: i])
-            start = i + 1
-    all.append(production[start: len(production)])
-    return all     
-productions = {}
-for line in grammar_file:
-    production = line.split()
-    production.remove('->')
-    productions[production[0]] = extract_all_productions(production[1:])
-print(productions)
+def parse(file_path='input.txt'):
+    file = open(file_path, 'r')
+    stack = [('Program', 0)]
+    action_table = get_action_table()
+    lineno = 1
+    root = Node('Program')
+    look_ahead, lineno, token_lineno = get_look_ahead(file, lineno)
+    while True:
+        nt, state = stack.pop()
+        if (nt, state, look_ahead) not in action_table.keys():  # Goal State
+            action = ['return']
+        else:
+            action = action_table[(nt, state, look_ahead)].split()
+
+        if action[0] == 'return':
+            nt, state, next_state = stack.pop()
+            stack.append((nt, next_state))
+
+        if action[0] == 'goto':
+            next_state = action[1]
+            stack.append((nt, next_state))
+            node = Node(look_ahead, parent=nt)
+            look_ahead, lineno, token_lineno = get_look_ahead(file, lineno)
+
+        if action[0] == 'call':
+            tk = action[1]
+            next_state = action[2]
+
+        if action[0] == 'missing':
+            tk = action[1]
+            next_state = action[2]
+
+        if action[0] == 'illegal':
+            t = action[1]
+            next_state = action[2]
+
+
+
+    file.close()
