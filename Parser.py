@@ -6,10 +6,13 @@ from anytree import Node, RenderTree
 def get_look_ahead(file, lineno):
     token, state, character, lineno, token_lineno = get_next_token(file, lineno)
     if state >= 0 and token is not None:  # No Lexical Error
-        return token, lineno, token_lineno
-    if not character:  # EOF
+        type, lexeme = token
+        if type == 'ID' or type == 'NUM':
+            return type, lineno, token_lineno
+        return lexeme, lineno, token_lineno
+    if not character:
         return '$', lineno, token_lineno
-    return get_look_ahead(file, lineno)
+    get_look_ahead(file, lineno)
 
 
 def parse(file_path='input.txt'):
