@@ -1,4 +1,4 @@
-from preprocess2 import get_action_table
+from preprocess import get_action_table
 from Scanner import get_next_token
 from anytree import Node, RenderTree
 
