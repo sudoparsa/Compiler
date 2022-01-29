@@ -1,5 +1,5 @@
 terminals = ['$', 'ID', ';', '[', 'NUM', ']', '(', ')', 'int', 'void', ',', '{', '}', 'break', 'if', 'endif', 'else',
-             'repeat', 'until', 'return', '=', '<', '==', '+', '-', '*']
+             'repeat', 'until', 'return', '=', '<', '==', '+', '-', '*', 'EPSILON']
 
 nterminals = ['Program', 'Declaration-list', 'Declaration', 'Declaration-initial', 'Declaration-prime',
               'Var-declaration-prime', 'Fun-declaration-prime', 'Type-specifier', 'Params', 'Param-list', 'Param',
@@ -74,14 +74,14 @@ for nterminal in nterminals:
 
 
 def extract_all_productions(production):
-    all = []
+    all_productions = []
     start = 0
     for i in range(len(production)):
         if production[i] == '|':
-            all.append(production[start: i])
+            all_productions.append(production[start: i])
             start = i + 1
-    all.append(production[start: len(production)])
-    return all
+    all_productions.append(production[start: len(production)])
+    return all_productions
 
 
 def get_productions(file):
@@ -120,27 +120,22 @@ def get_dfa(file):
     return dfa
 
 
-'''print(productions)
-print(dfa)
-print(sum([len(dfa[key].keys()) + 1 for key in dfa.keys()]))
-print(sum([sum(len(c)-1 for c in v)+2 for k,v in productions.items()]))'''
-
-
 def get_action_table(file_path='c-minus_001.txt'):
     file = open(file_path, 'r')
     dfa = get_dfa(file)
-    print(dfa)
     action_table = {}
     for nt, graph in dfa.items():
         for state, adjacent in graph.items():
             for t in terminals:
                 for token, next_state in adjacent.items():
                     if t == token:
-                        action_table[(nt, state, t)] = f'goto {next_state}'
+                        action_table[(nt, state, t)] = f'goto {token} {next_state}'
                     elif token in nterminals and t in first[token]:
                         action_table[(nt, state, t)] = f'call {token} {next_state}'
                     elif token in first_epsilon and t in follow[token]:
                         action_table[(nt, state, t)] = f'call {token} {next_state}'
+                    elif token == 'EPSILON' and t in follow[nt]:
+                        action_table[(nt, state, t)] = f'goto epsilon {next_state}'
                 if (nt, state, t) in action_table.keys():
                     continue
                 for token, next_state in adjacent.items():
@@ -160,4 +155,3 @@ def get_action_table(file_path='c-minus_001.txt'):
 
 if __name__ == '__main__':
     action_table = get_action_table()
-    #print(action_table)

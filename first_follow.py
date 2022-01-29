@@ -15,7 +15,7 @@ def find_first():
         a[nterminals[i]] = []
         for j in range(len(string)):
             if string[j] == '+':
-                a[nterminals[i]].append(terminals[j-1])
+                a[nterminals[i]].append(terminals[j - 1])
     print(a)
 
 
@@ -38,6 +38,7 @@ def find_follow():
             if string[j] == '+':
                 a[nterminals[i]].append(terminals[j - 1])
     print(a)
+
 
 find_first()
 find_follow()
