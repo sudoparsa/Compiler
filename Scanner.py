@@ -1,3 +1,5 @@
+from SymbolTable import *
+
 # We designed our Scanner based on dfa.png
 
 SYMBOL = [';', ':', ',', '[', ']', '(', ')', '{', '}', '+', '-', '<']
@@ -25,8 +27,8 @@ DFA = {  # 0  1  2  3  4  5  6  7  8  9  10  11  12  13  14  15  16
 GOAL_STATES = [2, 4, 5, 6, 8, 9, 11, 15]
 LOOK_AHEAD_STATES = [2, 4, 9, 11, -5]
 
-SYMBOL_TABLE = ['if', 'else', 'void', 'int', 'repeat', 'break', 'until', 'return', 'endif']
-NO_KEYWORDS = len(SYMBOL_TABLE)
+init_symbol_table()
+NO_KEYWORDS = len(KEYWORDS)
 
 tokens = {}
 errors = {}
@@ -65,11 +67,11 @@ def add_error(lineno, error):
 
 def get_token(state, lexeme):
     if state == 2:
-        if lexeme in SYMBOL_TABLE and SYMBOL_TABLE.index(lexeme) < NO_KEYWORDS:
+        if lexeme in SYMBOL_TABLE.keys() and list(SYMBOL_TABLE.keys()).index(lexeme) < NO_KEYWORDS:
             return 'KEYWORD', lexeme
         else:
-            if lexeme not in SYMBOL_TABLE:
-                SYMBOL_TABLE.append(lexeme)
+            if lexeme not in SYMBOL_TABLE.keys():
+                add_to_symbol_table(lexeme)
             return 'ID', lexeme
     if state == 4:
         return 'NUM', lexeme
