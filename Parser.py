@@ -26,7 +26,6 @@ def parse(file_path='input.txt'):
     action_table = get_action_table()
     lineno = 1
     token, look_ahead, lineno, token_lineno = get_token(file, lineno)
-    print(token, 0)
     errors = []
     while True:
         node, state, next_state = stack.pop()
@@ -36,7 +35,6 @@ def parse(file_path='input.txt'):
         else:
             action = action_table[(nt, state, look_ahead)].split()
 
-        print(token, action[0])
 
         if action[0] == 'return':
             if token == '$' and nt == 'Program':
@@ -53,7 +51,6 @@ def parse(file_path='input.txt'):
             Node(tk, parent=node)
             if tk != 'epsilon':
                 token, look_ahead, lineno, token_lineno = get_token(file, lineno)
-                print(token, 1)
 
         if action[0] == 'call':
             tk = action[1]
@@ -77,7 +74,6 @@ def parse(file_path='input.txt'):
                 errors.append(f'#{token_lineno} : syntax error, illegal {tk}')
             stack.append((node, state, next_state))
             token, look_ahead, lineno, token_lineno = get_token(file, lineno)
-            print(token, 2)
 
     file.close()
 

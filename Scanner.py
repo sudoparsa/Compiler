@@ -70,8 +70,8 @@ def get_token(state, lexeme):
         if lexeme in SYMBOL_TABLE.keys() and list(SYMBOL_TABLE.keys()).index(lexeme) < NO_KEYWORDS:
             return 'KEYWORD', lexeme
         else:
-            if lexeme not in SYMBOL_TABLE.keys():
-                add_to_symbol_table(lexeme)
+            '''if lexeme not in SYMBOL_TABLE.keys():
+                add_to_symbol_table(lexeme)'''
             return 'ID', lexeme
     if state == 4:
         return 'NUM', lexeme

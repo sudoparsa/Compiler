@@ -13,11 +13,11 @@ Param-prime -> [  ] | EPSILON
 Compound-stmt -> { Declaration-list Statement-list }
 Statement-list -> Statement Statement-list | EPSILON
 Statement -> Expression-stmt | Compound-stmt | Selection-stmt | Iteration-stmt | Return-stmt
-Expression-stmt -> Expression ; #pop | break ; #break | ;
+Expression-stmt -> Expression ; #pop | break ; #break_until | ;
 Selection-stmt -> if ( Expression ) #save Statement Else-stmt
 Else-stmt -> endif #jpf | else #jpf_save Statement #fill_jump endif
 Iteration-stmt -> repeat #label Statement until ( Expression ) #until #handle_breaks
-Return-stmt -> return Return-stmt-prime #return
+Return-stmt -> return Return-stmt-prime #return_func
 Return-stmt-prime -> ; | Expression #push_rv ;
 Expression -> Simple-expression-zegond | #push_token ID B
 B -> = #push_id Expression #assign | [ Expression ] #push_arr H | Simple-expression-prime
@@ -36,9 +36,9 @@ Term-prime -> Factor-prime G
 Term-zegond -> Factor-zegond G
 G -> #push_token * Factor #execute G | EPSILON
 Factor -> ( Expression ) | #push_token ID Var-call-prime | #push_num NUM
-Var-call-prime -> #store_dp #reserve_ra ( Args ) #call | Var-prime
-Var-prime -> [ Expression ] #push_arr | EPSILON
-Factor-prime -> #store_reserve ( Args ) #call | EPSILON
+Var-call-prime -> #store_reserve ( Args ) #call | Var-prime
+Var-prime -> [ Expression ] #push_arr | #push_id EPSILON
+Factor-prime -> #store_reserve ( Args ) #call | #push_id EPSILON
 Factor-zegond -> ( Expression ) | #push_num NUM
 Args -> Arg-list | EPSILON
 Arg-list -> Expression #store_arg Arg-list-prime
