@@ -153,5 +153,37 @@ def get_action_table(file_path='c-minus_001.txt'):
     return action_table
 
 
+def get_action_symbols(file_path='c-minus_001.txt'):
+    file = open(file_path, 'r')
+    action_symbols = {}
+    for line in file:
+        nt = line.split()[0]
+        productions = line[line.index('->') + 2:].split('|')
+        action_symbols[nt] = {}
+        state = 0
+        next_state = 1
+        for production in productions:
+            production = production.split()
+            for p in production:
+                if (state, next_state) not in action_symbols[nt]:
+                    action_symbols[nt][(state, next_state)] = []
+                if p.startswith('#'):
+                    action_symbols[nt][(state, next_state)].append(p)
+                else:
+                    state = next_state
+                    next_state += 1
+            state = 0
+    file.close()
+    return action_symbols
+
+
+
+
+
+
+
 if __name__ == '__main__':
-    action_table = get_action_table()
+    file = open('grammar.txt', 'r')
+    #print(get_dfa(file))
+    print(get_action_symbols())
+    # action_table = get_action_table()

@@ -9,11 +9,11 @@ def add_to_symbol_table(lexeme, type, scope, func=False):
         func_var = 'func'
     global global_address, local_address
     if scope == 'G':
-        global_address += 4
         address = global_address
+        global_address += 4
     else:
-        local_address += 4
         address = local_address
+        local_address += 4
 
     SYMBOL_TABLE[lexeme] = {'func/var': func_var, 'No.arg/cell': 0, 'type': type, 'scope': scope, 'address': address}
 

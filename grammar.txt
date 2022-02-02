@@ -1,78 +1,45 @@
-Program⟶DeclarationList $
-DeclarationList⟶Declaration DeclarationList
-DeclarationList⟶
-Declaration⟶DeclarationInitial DeclarationPrime
-DeclarationInitial⟶TypeSpecifier ID
-DeclarationPrime⟶FunDeclarationPrime
-DeclarationPrime⟶VarDeclarationPrime
-VarDeclarationPrime⟶; 
-VarDeclarationPrime⟶[ NUM ] ;
-FunDeclarationPrime⟶( Params ) CompoundStmt
-TypeSpecifier⟶int 
-TypeSpecifier⟶void
-Params⟶int ID ParamPrime ParamList 
-Params⟶void
-ParamList⟶, Param ParamList 
-ParamList⟶
-Param⟶DeclarationInitial ParamPrime
-ParamPrime⟶[ ] 
-ParamPrime⟶
-CompoundStmt⟶{ DeclarationList StatementList }
-StatementList⟶Statement StatementList
-StatementList⟶
-Statement⟶ExpressionStmt 
-Statement⟶CompoundStmt
-Statement⟶SelectionStmt
-Statement⟶IterationStmt
-Statement⟶ReturnStmt
-ExpressionStmt⟶Expression ;
-ExpressionStmt⟶break ;
-ExpressionStmt⟶;
-SelectionStmt⟶if ( Expression ) Statement ElseStmt
-ElseStmt⟶endif 
-ElseStmt⟶else Statement endif
-IterationStmt⟶repeat Statement until ( Expression )
-ReturnStmt⟶return ReturnStmtPrime
-ReturnStmtPrime⟶;
-ReturnStmtPrime⟶Expression ;
-Expression⟶SimpleExpressionZegond 
-Expression⟶ID B
-B⟶= Expression 
-B⟶[ Expression ] H 
-B⟶SimpleExpressionPrime
-H⟶= Expression 
-H⟶G D C
-SimpleExpressionZegond⟶AdditiveExpressionZegond C
-SimpleExpressionPrime⟶AdditiveExpressionPrime C
-C⟶Relop AdditiveExpression 
-C⟶
-Relop⟶< 
-Relop⟶==
-AdditiveExpression⟶Term D
-AdditiveExpressionPrime⟶TermPrime D
-AdditiveExpressionZegond⟶TermZegond D
-D⟶Addop Term D 
-D⟶
-Addop⟶+ 
-Addop⟶-
-Term⟶Factor G
-TermPrime⟶FactorPrime G
-TermZegond⟶FactorZegond G
-G⟶* Factor G 
-G⟶
-Factor⟶( Expression ) 
-Factor⟶ID VarCallPrime 
-Factor⟶NUM
-VarCallPrime⟶( Args ) 
-VarCallPrime⟶VarPrime
-VarPrime⟶[ Expression ] 
-VarPrime⟶
-FactorPrime⟶( Args )
-FactorPrime⟶
-FactorZegond⟶( Expression ) 
-FactorZegond⟶NUM
-Args⟶ArgList 
-Args⟶
-ArgList⟶Expression ArgListPrime
-ArgListPrime⟶, Expression ArgListPrime 
-ArgListPrime⟶
+Program -> Declaration-list $
+Declaration-list -> Declaration Declaration-list | EPSILON
+Declaration -> Declaration-initial Declaration-prime
+Declaration-initial ->  Type-specifier ID
+Declaration-prime -> Fun-declaration-prime | Var-declaration-prime
+Var-declaration-prime -> ; | [ NUM ] ;
+Fun-declaration-prime ->  ( Params ) Compound-stmt
+Type-specifier -> int | void
+Params -> int ID Param-prime Param-list | void
+Param-list -> , Param Param-list | EPSILON
+Param -> Declaration-initial Param-prime
+Param-prime -> [  ] | EPSILON
+Compound-stmt -> { Declaration-list Statement-list }
+Statement-list -> Statement Statement-list | EPSILON
+Statement -> Expression-stmt | Compound-stmt | Selection-stmt | Iteration-stmt | Return-stmt
+Expression-stmt -> Expression ; | break ; | ;
+Selection-stmt -> if ( Expression ) Statement Else-stmt
+Else-stmt -> endif | else Statement endif
+Iteration-stmt -> repeat Statement until ( Expression )
+Return-stmt -> return Return-stmt-prime
+Return-stmt-prime -> ; | Expression ;
+Expression -> Simple-expression-zegond | ID B
+B -> = Expression | [ Expression ] H | Simple-expression-prime
+H -> = Expression | G D C
+Simple-expression-zegond -> Additive-expression-zegond C
+Simple-expression-prime -> Additive-expression-prime C
+C -> Relop Additive-expression | EPSILON
+Relop -> < | ==
+Additive-expression -> Term D
+Additive-expression-prime -> Term-prime D
+Additive-expression-zegond -> Term-zegond D
+D -> Addop Term D | EPSILON
+Addop -> + | -
+Term -> Factor G
+Term-prime -> Factor-prime G
+Term-zegond -> Factor-zegond G
+G -> * Factor G | EPSILON
+Factor -> ( Expression ) | ID Var-call-prime | NUM
+Var-call-prime -> ( Args ) | Var-prime
+Var-prime -> [ Expression ] | EPSILON
+Factor-prime -> ( Args ) | EPSILON
+Factor-zegond -> ( Expression ) | NUM
+Args -> Arg-list | EPSILON
+Arg-list -> Expression Arg-list-prime
+Arg-list-prime -> , Expression Arg-list-prime | EPSILON

@@ -1,5 +1,5 @@
 from SymbolTable import *
-
+from preprocess import get_action_symbols
 
 rv_register = 450
 dp_register = 454
@@ -290,3 +290,15 @@ def call(token):
         e = semantic_stack.pop()
         program_block.append(f'(PRINT, {e}, , )')
         output_mode = False
+
+
+action_symbols = get_action_symbols()
+
+
+def routines(st, nt, token, state, next_state):
+    if st == 'return':
+        next_state = state + 1
+    if (state, next_state) in action_symbols[nt]:
+        for action in action_symbols[nt][(state, next_state)]:
+            eval(action[1:] + '(token)')
+    return

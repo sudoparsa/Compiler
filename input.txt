@@ -1,19 +1,7 @@
-/*sample 7*/
-int func(int x){
-	int a;
-	a = 10;
-	output(x);
-	if(a < x) {
-		return(1);
-	}
-	else {
-		return(2);
-	}
-}
-void main  ( void )
-{
-	int i;
-	i func (2+4);
-	output(i;
-}
+/* sample 1 */
 
+void main(void){
+	int a;
+	int b;
+	a = b + 1;
+}

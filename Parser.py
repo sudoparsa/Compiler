@@ -1,3 +1,4 @@
+from code_gen import routines
 from preprocess import get_action_table
 from Scanner import get_next_token
 from anytree import Node, RenderTree
@@ -23,7 +24,7 @@ def parse(file_path='input.txt'):
     file = open(file_path, 'rb')
     root = Node('Program')
     stack = [(root, 0, 1)]
-    action_table = get_action_table()
+    action_table = get_action_table('grammar.txt')
     lineno = 1
     token, look_ahead, lineno, token_lineno = get_token(file, lineno)
     errors = []
@@ -35,8 +36,8 @@ def parse(file_path='input.txt'):
         else:
             action = action_table[(nt, state, look_ahead)].split()
 
-
         if action[0] == 'return':
+            routines(action[0], nt, token, state, next_state)
             if token == '$' and nt == 'Program':
                 break
             node, state, next_state = stack.pop()
@@ -47,6 +48,7 @@ def parse(file_path='input.txt'):
             if tk != 'epsilon':
                 tk = token
             next_state = int(action[2])
+            routines(action[0], nt, tk, state, next_state)
             stack.append((node, next_state, 0))
             Node(tk, parent=node)
             if tk != 'epsilon':
@@ -55,6 +57,7 @@ def parse(file_path='input.txt'):
         if action[0] == 'call':
             tk = action[1]
             next_state = int(action[2])
+            routines(action[0], nt, tk, state, next_state)
             stack.append((node, state, next_state))
             stack.append((Node(tk, parent=node), 0, 0))
 
