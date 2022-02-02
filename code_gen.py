@@ -1,3 +1,6 @@
+from SymbolTable import *
+
+
 rv_register = 450
 dp_register = 454
 gp_register = 458
@@ -20,19 +23,19 @@ symbol_table = []
 
 
 def add_symbol_id(lexeme, type, scope, func=False):
-    pass
+    add_to_symbol_table(lexeme, type, scope, func)
 
 
 def get_address(lexeme):
-    return
+    return get_table_address(lexeme)
 
 
 def get_free_address():
-    pass
+    get_table_free_address()
 
 
 def reset_scope():
-    pass
+    table_reset_scope()
 
 
 output_mode = False

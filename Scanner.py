@@ -1,5 +1,3 @@
-from SymbolTable import *
-
 # We designed our Scanner based on dfa.png
 
 SYMBOL = [';', ':', ',', '[', ']', '(', ')', '{', '}', '+', '-', '<']
@@ -27,7 +25,7 @@ DFA = {  # 0  1  2  3  4  5  6  7  8  9  10  11  12  13  14  15  16
 GOAL_STATES = [2, 4, 5, 6, 8, 9, 11, 15]
 LOOK_AHEAD_STATES = [2, 4, 9, 11, -5]
 
-init_symbol_table()
+KEYWORDS = ['if', 'else', 'void', 'int', 'repeat', 'break', 'until', 'return', 'endif']
 NO_KEYWORDS = len(KEYWORDS)
 
 tokens = {}
@@ -67,12 +65,9 @@ def add_error(lineno, error):
 
 def get_token(state, lexeme):
     if state == 2:
-        if lexeme in SYMBOL_TABLE.keys() and list(SYMBOL_TABLE.keys()).index(lexeme) < NO_KEYWORDS:
+        if lexeme in KEYWORDS:
             return 'KEYWORD', lexeme
-        else:
-            '''if lexeme not in SYMBOL_TABLE.keys():
-                add_to_symbol_table(lexeme)'''
-            return 'ID', lexeme
+        return 'ID', lexeme
     if state == 4:
         return 'NUM', lexeme
     if state == 5:
@@ -116,8 +111,8 @@ def get_next_token(file, lineno):
             error = get_error(state, raw_token)
             return error, state, character, temp_lineno, lineno
 
-
-def get_all_tokens(file_path='input.txt'):
+# Below functions are for phase1.
+'''def get_all_tokens(file_path='input.txt'):
     file = open(file_path, 'rb')
     lineno = 1
     while True:
@@ -157,3 +152,4 @@ def save2txt():
                 f.write(f'({token[0]}, {token[1]}) ')
             f.write('\n')
     f.close()
+'''
