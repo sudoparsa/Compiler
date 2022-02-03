@@ -21,9 +21,11 @@ break_list = []
 
 symbol_table = []
 
+declare_main = False
 
-def add_symbol_id(lexeme, type, scope, func=False):
-    add_to_symbol_table(lexeme, type, scope, func)
+
+def add_symbol_id(lexeme, type, scope, func=False, func_address=0):
+    add_to_symbol_table(lexeme, type, scope, func, func_address)
 
 
 def get_address(lexeme):
@@ -31,7 +33,7 @@ def get_address(lexeme):
 
 
 def get_free_address():
-    get_table_free_address()
+    return get_table_free_address()
 
 
 def reset_scope():
@@ -114,10 +116,20 @@ def end_scope(token):
     reset_scope()
 
 
-def fill_jump(token):
+def jp(token):
     i = semantic_stack.pop()
     here = len(program_block)
     program_block[i] = f'(JP, {here}, , )'
+
+
+def fill_jump(token):
+    global declare_main
+    if not declare_main:
+        i = semantic_stack.pop()
+        here = len(program_block)
+        program_block[i] = f'(JP, {here}, , )'
+    else:
+        declare_main = False
 
 
 def save(token):
@@ -128,9 +140,13 @@ def save(token):
 def declare_func(token):
     lexeme = semantic_stack.pop()
     type = semantic_stack.pop()
-    add_symbol_id(lexeme, type, 'G', func=True)
-    if not lexeme == 'main':
+    if lexeme == 'main':
+        global declare_main
+        declare_main = True
+    else:
         save(token)
+    here = len(program_block)
+    add_symbol_id(lexeme, type, 'G', func=True, func_address=here)
 
 
 def pop(token):
@@ -287,7 +303,7 @@ def call(token):
         program_block.append(f'(ASSIGN, {rv_register}, {temp}, )')
         semantic_stack.append(temp)
     else:
-        e = semantic_stack.pop()
+        e = semantic_stack[-1]
         program_block.append(f'(PRINT, {e}, , )')
         output_mode = False
 
@@ -297,8 +313,13 @@ action_symbols = get_action_symbols()
 
 def routines(st, nt, token, state, next_state):
     if st == 'return':
-        next_state = state + 1
+        next_state = state
     if (state, next_state) in action_symbols[nt]:
         for action in action_symbols[nt][(state, next_state)]:
+            print(semantic_stack)
+            print(program_block)
+            print(SYMBOL_TABLE)
+            print(action)
+            print('fuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuck')
             eval(action[1:] + '(token)')
     return

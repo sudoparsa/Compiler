@@ -110,8 +110,6 @@ def get_dfa(file):
                     next_state = state + 1
                 else:
                     next_state = state + index + 1
-                if i == len(pro) - 1:
-                    next_state = goal_state
                 table[state][token] = next_state
                 if next_state > state:
                     index += 1
@@ -154,6 +152,9 @@ def get_action_table(file_path='c-minus_001.txt'):
 
 
 def get_action_symbols(file_path='c-minus_001.txt'):
+    file = open('grammar.txt', 'r')
+    dfa = get_dfa(file)
+    file.close()
     file = open(file_path, 'r')
     action_symbols = {}
     for line in file:
@@ -161,17 +162,19 @@ def get_action_symbols(file_path='c-minus_001.txt'):
         productions = line[line.index('->') + 2:].split('|')
         action_symbols[nt] = {}
         state = 0
-        next_state = 1
         for production in productions:
             production = production.split()
+            actions = []
             for p in production:
-                if (state, next_state) not in action_symbols[nt]:
-                    action_symbols[nt][(state, next_state)] = []
                 if p.startswith('#'):
-                    action_symbols[nt][(state, next_state)].append(p)
+                    actions.append(p)
                 else:
+                    next_state = dfa[nt][state][p]
+                    action_symbols[nt][(state, next_state)] = actions
+                    actions = []
                     state = next_state
-                    next_state += 1
+            if actions:
+                action_symbols[nt][(state, state)] = actions
             state = 0
     file.close()
     return action_symbols
@@ -184,6 +187,6 @@ def get_action_symbols(file_path='c-minus_001.txt'):
 
 if __name__ == '__main__':
     file = open('grammar.txt', 'r')
-    #print(get_dfa(file))
+    print(get_dfa(file))
     print(get_action_symbols())
     # action_table = get_action_table()
