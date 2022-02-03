@@ -36,10 +36,10 @@ Term-prime -> Factor-prime G
 Term-zegond -> Factor-zegond G
 G -> #push_token * Factor #execute G | EPSILON
 Factor -> ( Expression ) | #push_token ID Var-call-prime | #push_num NUM
-Var-call-prime -> #store_reserve ( Args ) #call | Var-prime
+Var-call-prime -> ( Args ) #call | Var-prime
 Var-prime -> [ Expression ] #push_arr | #push_id EPSILON
-Factor-prime -> #store_reserve ( Args ) #call | #push_id EPSILON
+Factor-prime -> ( Args ) #call | #push_id EPSILON
 Factor-zegond -> ( Expression ) | #push_num NUM
 Args -> Arg-list | EPSILON
-Arg-list -> Expression #store_arg Arg-list-prime
-Arg-list-prime -> , Expression #store_arg Arg-list-prime | EPSILON
+Arg-list -> Expression #push_param Arg-list-prime
+Arg-list-prime -> , Expression #push_param Arg-list-prime | EPSILON

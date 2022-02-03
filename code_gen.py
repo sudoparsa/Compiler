@@ -6,14 +6,23 @@ dp_register = 454
 gp_register = 458
 ap_register = 462
 
-temp_pointer = 3000
+
 
 program_block = [
     f'(ASSIGN, #0, {rv_register}, )',
     f'(ASSIGN, #500, {dp_register}, )',
     f'(ASSIGN, #15000, {gp_register}, )',
-    f'(ASSIGN, #20000, {ap_register}, )'
+    f'(ASSIGN, #20000, {ap_register}, )',
+    f'(JP, 11, , )',
+	f'(ADD, #4, {dp_register}, 3000)',
+    f'(ADD, #8, {dp_register}, 3008)',
+    f'(PRINT, @3008, , )',
+	f'(ASSIGN, @{dp_register}, {dp_register}, )',
+	f'(ASSIGN, @3000, 3004, )',
+	f'(JP, @3004, , )'
 ]
+
+temp_pointer = 3012
 
 semantic_stack = []
 
@@ -40,8 +49,8 @@ def reset_scope():
     table_reset_scope()
 
 
-output_mode = False
 scope = 'G'
+add_symbol_id('output', 'void', 'G', func=True, func_address=5)
 
 
 def get_temp():
@@ -51,11 +60,7 @@ def get_temp():
 
 
 def push_token(token):
-    if token == 'output':
-        global output_mode
-        output_mode = True
-    else:
-        semantic_stack.append(token)
+    semantic_stack.append(token)
 
 
 def declare_id(token, arg=False):
@@ -243,7 +248,6 @@ def push_arr(token):
     program_block.append(f'(ADD, @{pointer_arr}, {temp}, {final})')
     semantic_stack.append(f'@{final}')
 
-
 def execute(token):
     op1 = semantic_stack.pop()
     operand = semantic_stack.pop()
@@ -260,53 +264,80 @@ def execute(token):
     else:
         program_block.append(f'(LT, {op2}, {op1}, {temp})')
 
-    semantic_stack.append(temp)
+    semantic_stack.append(str(temp))
 
 
-def store_reserve(token):
-    if not output_mode:
-        lexeme = semantic_stack.pop()
-        address, _scope = get_address(lexeme)
-        semantic_stack.append(address)
-        free_address = get_free_address()
-        temp = get_temp()
-        program_block.append(f'(ADD, {dp_register}, #{free_address + 8}, {temp})')
-        program_block.append(f'(ASSIGN, {dp_register}, @{temp}, )')
-        semantic_stack.append(temp)
-
-        free_address = get_free_address()
-        temp = get_temp()
-        program_block.append(f'(ADD, {dp_register}, #{free_address + 8}, {temp})')
-        semantic_stack.append(f'@{temp}')
-
-
-def store_arg(token):
-    if not output_mode:
-        e = semantic_stack.pop()
+def push_param(token):
+    semantic_stack.append(['param'])
+    
+def store_arg(params):
+    while params:
+        e = params.pop()
         free_address = get_free_address()
         temp = get_temp()
         program_block.append(f'(ADD, {dp_register}, #{free_address + 8}, {temp})')
         program_block.append(f'(ASSIGN, {e}, @{temp}, )')
 
+def extract_params(token):
+    params = []
+    while semantic_stack[-1] == ['param']:
+        semantic_stack.pop()
+        params.append(semantic_stack.pop())
+    return params
+    
+def is_temp(name):
+    if isinstance(name, str):
+        return name.isnumeric() or (name[0] == '@' and name[1:].isnumeric())
+    return False
+
+def save_temps():
+    addresses = []
+    for var in semantic_stack:
+        if is_temp(var):
+            name = var if not  var[0] == '@' else var[1:]
+            free_address = get_free_address()
+            temp = get_temp()
+            program_block.append(f'(ADD, {dp_register}, #{free_address + 8}, {temp})')
+            program_block.append(f'(ASSIGN, {name}, @{temp}, )')
+            addresses.append(free_address)
+    return addresses
+
+def load_temps(addresses):
+    i = 0
+    for var in semantic_stack:
+        if is_temp(var):
+            name = var if not  var[0] == '@' else var[1:]
+            free_address = addresses[i]
+            i += 1
+            temp = get_temp()
+            program_block.append(f'(ADD, {dp_register}, #{free_address + 8}, {temp})')
+            program_block.append(f'(ASSIGN, @{temp}, {name}, )') 
 
 def call(token):
-    global output_mode
-    if not output_mode:
-        return_address = semantic_stack.pop()
-        dp_address = semantic_stack.pop()
-        jump_address = semantic_stack.pop()
-        program_block.append(f'(ASSIGN, {dp_address}, {dp_register}, )')
-        here = len(program_block)
-        program_block.append(f'(ASSIGN, #{here + 2}, {return_address}, )')
-        program_block.append(f'(JP, {jump_address}, , )')
+    params = extract_params(token)
+    addresses = save_temps()
+    lexeme = semantic_stack.pop()
+    jump_address, _ = get_address(lexeme)
+    free_address = get_free_address()
+    new_dp = get_temp()
+    program_block.append(f'(ADD, {dp_register}, #{free_address + 8}, {new_dp})')
+    program_block.append(f'(ASSIGN, {dp_register}, @{new_dp}, )')
 
-        temp = get_temp()
-        program_block.append(f'(ASSIGN, {rv_register}, {temp}, )')
-        semantic_stack.append(temp)
-    else:
-        e = semantic_stack[-1]
-        program_block.append(f'(PRINT, {e}, , )')
-        output_mode = False
+    free_address = get_free_address()
+    return_address = get_temp()
+    program_block.append(f'(ADD, {dp_register}, #{free_address + 8}, {return_address})')
+
+    store_arg(params)
+
+    program_block.append(f'(ASSIGN, {new_dp}, {dp_register}, )')
+    here = len(program_block)
+    program_block.append(f'(ASSIGN, #{here + 2}, @{return_address}, )')
+    program_block.append(f'(JP, {jump_address}, , )')
+
+    load_temps(addresses)
+    temp = get_temp()
+    program_block.append(f'(ASSIGN, {rv_register}, {temp}, )')
+    semantic_stack.append(str(temp))
 
 
 action_symbols = get_action_symbols()
@@ -317,10 +348,10 @@ def routines(st, nt, token, state, next_state):
         next_state = state
     if (state, next_state) in action_symbols[nt]:
         for action in action_symbols[nt][(state, next_state)]:
-            '''print(semantic_stack)
-            print(program_block)
-            print(SYMBOL_TABLE)
-            print(action)
-            print('fuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuck')'''
+            # print(semantic_stack)
+            # print(program_block)
+            # print(SYMBOL_TABLE)
+            # print(action)
+            # print('fuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuck')
             eval(action[1:] + '(token)')
     return
