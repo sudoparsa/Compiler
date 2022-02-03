@@ -201,12 +201,13 @@ def push_rv(token):
 
 
 def return_func(token):
-    retrun_address_address = get_temp()
-    program_block.append(f'(ADD, #4, {dp_register}, {retrun_address_address})')
-    program_block.append(f'(ASSIGN, @{dp_register}, {dp_register}, )')
-    retrun_address = get_temp()
-    program_block.append(f'(ASSIGN, @{retrun_address_address}, {retrun_address}, )')
-    program_block.append(f'(JP, @{retrun_address}, , )')
+    if not declare_main:
+        retrun_address_address = get_temp()
+        program_block.append(f'(ADD, #4, {dp_register}, {retrun_address_address})')
+        program_block.append(f'(ASSIGN, @{dp_register}, {dp_register}, )')
+        retrun_address = get_temp()
+        program_block.append(f'(ASSIGN, @{retrun_address_address}, {retrun_address}, )')
+        program_block.append(f'(JP, @{retrun_address}, , )')
 
 
 def push_id(token):
@@ -239,7 +240,7 @@ def push_arr(token):
     temp = get_temp()
     program_block.append(f'(MULT, #4, {index}, {temp})')
     final = get_temp()
-    program_block.append(f'(ADD, {pointer_arr}, {temp}, {final})')
+    program_block.append(f'(ADD, @{pointer_arr}, {temp}, {final})')
     semantic_stack.append(f'@{final}')
 
 
@@ -316,10 +317,10 @@ def routines(st, nt, token, state, next_state):
         next_state = state
     if (state, next_state) in action_symbols[nt]:
         for action in action_symbols[nt][(state, next_state)]:
-            print(semantic_stack)
+            '''print(semantic_stack)
             print(program_block)
             print(SYMBOL_TABLE)
             print(action)
-            print('fuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuck')
+            print('fuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuck')'''
             eval(action[1:] + '(token)')
     return
