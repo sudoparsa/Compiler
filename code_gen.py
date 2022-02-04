@@ -6,20 +6,18 @@ dp_register = 454
 gp_register = 458
 ap_register = 462
 
-
-
 program_block = [
     f'(ASSIGN, #0, {rv_register}, )',
     f'(ASSIGN, #500, {dp_register}, )',
     f'(ASSIGN, #15000, {gp_register}, )',
     f'(ASSIGN, #20000, {ap_register}, )',
     f'(JP, 11, , )',
-	f'(ADD, #4, {dp_register}, 3000)',
+    f'(ADD, #4, {dp_register}, 3000)',
     f'(ADD, #8, {dp_register}, 3008)',
     f'(PRINT, @3008, , )',
-	f'(ASSIGN, @{dp_register}, {dp_register}, )',
-	f'(ASSIGN, @3000, 3004, )',
-	f'(JP, @3004, , )'
+    f'(ASSIGN, @{dp_register}, {dp_register}, )',
+    f'(ASSIGN, @3000, 3004, )',
+    f'(JP, @3004, , )'
 ]
 
 temp_pointer = 3012
@@ -28,13 +26,15 @@ semantic_stack = []
 
 break_list = []
 
-symbol_table = []
-
 declare_main = False
 
 
-def add_symbol_id(lexeme, type, scope, func=False, func_address=0):
-    add_to_symbol_table(lexeme, type, scope, func, func_address)
+def get_semantic_stack():
+    return semantic_stack
+
+
+def add_symbol_id(lexeme, type, scope, func=False, func_address=0, arr=False):
+    add_to_symbol_table(lexeme, type, scope, func, func_address, arr)
 
 
 def get_address(lexeme):
@@ -49,8 +49,13 @@ def reset_scope():
     table_reset_scope()
 
 
+output_mode = False
 scope = 'G'
 add_symbol_id('output', 'void', 'G', func=True, func_address=5)
+
+args_type = []
+func_lexeme = ''
+repeat_no = 0
 
 
 def get_temp():
@@ -63,12 +68,24 @@ def push_token(token):
     semantic_stack.append(token)
 
 
+def set_args(token):
+    global args_type
+    set_func_args(func_lexeme, args_type)
+    args_type = []
+
+
+def set_arr(token):
+    set_table_arr(semantic_stack.pop())
+
+
 def declare_id(token, arg=False):
     lexeme = semantic_stack.pop()
     type = semantic_stack.pop()
     add_symbol_id(lexeme, type, scope)
 
-    if not arg:
+    if arg:
+        semantic_stack.append(lexeme)
+    else:
         temp = get_temp()
         local_address, _scope = get_address(lexeme)
         if scope == 'G':
@@ -79,6 +96,8 @@ def declare_id(token, arg=False):
 
 
 def declare_arg(token):
+    global args_type
+    args_type.append(semantic_stack[-1])
     declare_id(token, True)
 
 
@@ -97,7 +116,7 @@ def declare_arr(token):
     length = int(size[1:])
     lexeme = semantic_stack.pop()
     type = semantic_stack.pop()
-    add_symbol_id(lexeme, type, scope)
+    add_symbol_id(lexeme, type, scope, arr=True)
     temp = get_temp()
     address, _scope = get_address(lexeme)
 
@@ -107,6 +126,7 @@ def declare_arr(token):
         program_block.append(f'(ADD, {dp_register}, #{address + 8}, {temp})')
 
     program_block.append(f'(ASSIGN, {ap_register}, @{temp}, )')
+
     assign_array_memory(length)
 
 
@@ -152,6 +172,8 @@ def declare_func(token):
         save(token)
     here = len(program_block)
     add_symbol_id(lexeme, type, 'G', func=True, func_address=here)
+    global func_lexeme
+    func_lexeme = lexeme
 
 
 def pop(token):
@@ -184,6 +206,8 @@ def jpf_save(token):
 def label(token):
     here = len(program_block)
     semantic_stack.append(here)
+    global repeat_no
+    repeat_no += 1
 
 
 def until(token):
@@ -198,6 +222,8 @@ def handle_breaks(token):
     for br in break_list:
         program_block[br] = f'(JP, {here}, , )'
     break_list = []
+    global repeat_no
+    repeat_no -= 1
 
 
 def push_rv(token):
@@ -248,6 +274,7 @@ def push_arr(token):
     program_block.append(f'(ADD, @{pointer_arr}, {temp}, {final})')
     semantic_stack.append(f'@{final}')
 
+
 def execute(token):
     op1 = semantic_stack.pop()
     operand = semantic_stack.pop()
@@ -269,7 +296,8 @@ def execute(token):
 
 def push_param(token):
     semantic_stack.append(['param'])
-    
+
+
 def store_arg(params):
     while params:
         e = params.pop()
@@ -278,23 +306,26 @@ def store_arg(params):
         program_block.append(f'(ADD, {dp_register}, #{free_address + 8}, {temp})')
         program_block.append(f'(ASSIGN, {e}, @{temp}, )')
 
+
 def extract_params(token):
     params = []
     while semantic_stack[-1] == ['param']:
         semantic_stack.pop()
         params.append(semantic_stack.pop())
     return params
-    
+
+
 def is_temp(name):
     if isinstance(name, str):
         return name.isnumeric() or (name[0] == '@' and name[1:].isnumeric())
     return False
 
+
 def save_temps():
     addresses = []
     for var in semantic_stack:
         if is_temp(var):
-            name = var if not  var[0] == '@' else var[1:]
+            name = var if not var[0] == '@' else var[1:]
             free_address = get_free_address()
             temp = get_temp()
             program_block.append(f'(ADD, {dp_register}, #{free_address + 8}, {temp})')
@@ -302,16 +333,18 @@ def save_temps():
             addresses.append(free_address)
     return addresses
 
+
 def load_temps(addresses):
     i = 0
     for var in semantic_stack:
         if is_temp(var):
-            name = var if not  var[0] == '@' else var[1:]
+            name = var if not var[0] == '@' else var[1:]
             free_address = addresses[i]
             i += 1
             temp = get_temp()
             program_block.append(f'(ADD, {dp_register}, #{free_address + 8}, {temp})')
-            program_block.append(f'(ASSIGN, @{temp}, {name}, )') 
+            program_block.append(f'(ASSIGN, @{temp}, {name}, )')
+
 
 def call(token):
     params = extract_params(token)
@@ -348,10 +381,5 @@ def routines(st, nt, token, state, next_state):
         next_state = state
     if (state, next_state) in action_symbols[nt]:
         for action in action_symbols[nt][(state, next_state)]:
-            # print(semantic_stack)
-            # print(program_block)
-            # print(SYMBOL_TABLE)
-            # print(action)
-            # print('fuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuck')
             eval(action[1:] + '(token)')
     return
